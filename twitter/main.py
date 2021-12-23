@@ -29,7 +29,14 @@ def main(date, subdir=".", tmpdir="./tmp"):
     filepath = os.path.join(subdir, f"{date}_hk.json")
     year, month, day = _ymd_from_str(date)
     ta = archive.TweetArchive(year, month, day, subdir=tmpdir)
-    ta.fetch()
+    try:
+        ta.fetch()
+    except archive.ArchiveNotFound as err:
+        logging.warning(str(err))
+        ta.cleanup()
+        with open(filepath, "w") as f:
+            f.write("REMOTE ARCHIVE NOT FOUND\n")
+        return
 
     with open(filepath, "w") as f:
         for tweet in ta.tweets():
@@ -37,6 +44,7 @@ def main(date, subdir=".", tmpdir="./tmp"):
                 f.write(tweet.to_json())
                 f.write("\n")
                 f.flush()
+    ta.cleanup()
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
