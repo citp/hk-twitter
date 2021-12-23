@@ -1,6 +1,10 @@
-import archive
+import argparse
+import os
+from datetime import datetime
 import logging
 import json
+
+import archive
 
 def hk_in_profile(user):
     if not user.location:
@@ -14,11 +18,20 @@ def hk_in_profile(user):
     return False
 
 
-def main():
+def _ymd_from_str(date):
+    dt = datetime.strptime(date, "%Y_%m_%d")
+    return dt.year, dt.month, dt.day
+
+
+def main(date, subdir=".", tmpdir="./tmp"):
     logging.getLogger().setLevel(logging.INFO)
-    ta = archive.TweetArchive(2019,7,2)
+
+    filepath = os.path.join(subdir, f"{date}_hk.json")
+    year, month, day = _ymd_from_str(date)
+    ta = archive.TweetArchive(year, month, day, subdir=tmpdir)
     ta.fetch()
-    with open("2019-7-2-hk.json", "w") as f:
+
+    with open(filepath, "w") as f:
         for tweet in ta.tweets():
             if hk_in_profile(tweet.user):
                 f.write(tweet.to_json())
@@ -26,4 +39,8 @@ def main():
                 f.flush()
 
 if __name__=="__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("date")
+    parser.add_argument("--subdir", default=".")
+    args = parser.parse_args()
+    main(args.date, args.subdir)
