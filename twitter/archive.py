@@ -126,7 +126,12 @@ class TweetArchive:
                 logging.info("...%d/%d files processed for %s", i, len(filepaths), self.desc())
             with bz2.open(filepath, "r") as file:
                 for line in file:
-                    data = json.loads(line.strip())
+                    try:
+                        data = json.loads(line.strip())
+                    except json.decoder.JSONDecodeError as e:
+                        logging.warning(f"{filepath} has JSONDecodeError, skipping line")
+                        continue
+
                     if "user" not in data:
                         continue
                     yield Tweet.from_dict(data)
