@@ -27,7 +27,7 @@ This process will create a directory `results/users`, which will contain a json 
 
 Run `notebook/users_from_tweets.ipynb` to produce a `users.json` file that aggregates all the data from the above process. Remember to set `TWEETS_DIR` to point to the directory containing the filtered Twitter stream.
 * Input: `results/users/*`
-* Output: `datasets/users/ia/users.json`
+* Output: `datasets/users/ia/<population>.json`
 
 ### 3. Query to see if users and tweets still exist today (hits Twitter API)
 
@@ -35,15 +35,15 @@ Run `notebook/query_users.ipynb`. It will query Twitter's API to determine wheth
 
 Since it hits the Twitter API it will take some time, up to 30 minutes. It writes results to the output file as it goes, so stopping in the middle is also safe.
 
-* Input: `datasets/users/ia/users.json`
-* Output: `datasets/queried/users.jsonl`, `datasets/queried/tweets.jsonl`
+* Input: `datasets/users/ia/<population>.json`
+* Output: `datasets/queried/<population>/users.jsonl`, `datasets/queried/<population>/tweets.jsonl`
 
 ### 4. Generate pandas DB files for processing.
 
 Run `notebook/json-to-pandas.ipynb` to convert all users and tweets (and associated deletion metadata) into an easily query-able Pandas database file.
 
-* Input: `datasets/queried/users.jsonl`, `datasets/queried/tweets.jsonl`
-* Output: `datasets/pandas/users_ia.pkl`, `datasets/pandas/tweets_ia.pkl`
+* Input: `datasets/queried/<population>/users.jsonl`, `datasets/queried/<population>/tweets.jsonl`
+* Output: `datasets/pandas/<population>/users.pkl`, `datasets/pandas/<population>/tweets.pkl`
 
 ### 5. Count how many Tweets we could probably fetch. (hits Twitter API)
 
@@ -52,7 +52,7 @@ Run `python3 fetch-timeline-counts.py` to determine how many Tweets each of thes
 Note: this does not count towards our total monthly API limits, but it is very slow because a single request can only return (maximum) one month of Tweet counts, and we are trying to see how many Tweets each account makes over several years. It can only process approximately 8-9 total accounts (aka 300 requests) every 15 minutes, so it can process 800 accounts per 24-hour period.
 
 However, it is important to do this step in order to figure out which accounts to prioritize when actually fetching Tweets in the next step, which will count towards an overall monthly API cap.
-* Input: `datasets/pandas/users_ia.pkl`
+* Input: `datasets/pandas/hk/users.pkl`
 * Output: `hk_users_tweet_counts.json`
 
 ### 6. Fetch all the Tweets. (hits Twitter API and counts towards monthly Tweet limit)
@@ -63,3 +63,5 @@ Run `python3 fetch-timelines.py`. Each request can retrieve up to 500 Tweets, so
 * Output: `tweets_timeline.pkl`
 
 ## Analyses
+
+* Deletion rates: Run `user_deletion_analysis.ipynb` to get user and Tweet deletion rates across different experiment populations.
